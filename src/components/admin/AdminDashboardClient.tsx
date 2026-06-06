@@ -139,6 +139,134 @@ export default function AdminDashboardClient({
   // Search in Orders list
   const [orderSearch, setOrderSearch] = useState('');
 
+  // Course creation/editing states
+  const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [courseForm, setCourseForm] = useState({
+    title: '',
+    slug: '',
+    description: '',
+    price: 0,
+    image_url: '📚',
+    published: true,
+  });
+
+  const openAddCourse = () => {
+    setEditingCourse(null);
+    setCourseForm({
+      title: '',
+      slug: '',
+      description: '',
+      price: 0,
+      image_url: '📚',
+      published: true,
+    });
+    setIsCourseModalOpen(true);
+  };
+
+  const openEditCourse = (course: Course) => {
+    setEditingCourse(course);
+    setCourseForm({
+      title: course.title,
+      slug: course.slug,
+      description: course.description,
+      price: course.price,
+      image_url: course.image_url || '📚',
+      published: course.published,
+    });
+    setIsCourseModalOpen(true);
+  };
+
+  const handleSaveCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!courseForm.title || !courseForm.slug) {
+      alert('Vui lòng nhập tên khóa học và đường dẫn slug!');
+      return;
+    }
+
+    try {
+      if (editingCourse) {
+        // Update existing course
+        const { error } = await supabase
+          .from('courses')
+          .update({
+            title: courseForm.title,
+            slug: courseForm.slug,
+            description: courseForm.description,
+            price: courseForm.price,
+            image_url: courseForm.image_url,
+            published: courseForm.published,
+          })
+          .eq('id', editingCourse.id);
+
+        if (error) throw error;
+
+        setCourses((prev) =>
+          prev.map((c) =>
+            c.id === editingCourse.id
+              ? {
+                  ...c,
+                  title: courseForm.title,
+                  slug: courseForm.slug,
+                  description: courseForm.description,
+                  price: courseForm.price,
+                  image_url: courseForm.image_url,
+                  published: courseForm.published,
+                }
+              : c
+          )
+        );
+      } else {
+        // Create new course
+        const { data, error } = await supabase
+          .from('courses')
+          .insert({
+            title: courseForm.title,
+            slug: courseForm.slug,
+            description: courseForm.description,
+            price: courseForm.price,
+            image_url: courseForm.image_url,
+            published: courseForm.published,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          const newCourse: Course = {
+            id: data.id,
+            title: data.title,
+            slug: data.slug,
+            description: data.description || '',
+            price: Number(data.price),
+            image_url: data.image_url || '📚',
+            published: data.published,
+          };
+          setCourses((prev) => [...prev, newCourse]);
+        }
+      }
+
+      setIsCourseModalOpen(false);
+    } catch (err: any) {
+      console.error('Error saving course:', err);
+      alert('Lỗi lưu khóa học: ' + err.message);
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: string) => {
+    if (!confirm('Bạn có chắc chắn muốn xoá khóa học này? Toàn bộ bài học liên quan sẽ bị xoá theo!')) return;
+    try {
+      const { error } = await supabase.from('courses').delete().eq('id', courseId);
+      if (error) throw error;
+
+      setCourses((prev) => prev.filter((c) => c.id !== courseId));
+    } catch (err: any) {
+      console.error('Error deleting course:', err);
+      alert('Lỗi xoá khóa học: ' + err.message);
+    }
+  };
+
   // Calculate dynamic stats
   const totalRevenue = orders.reduce((sum, o) => sum + (o.status === 'completed' ? Number(o.amount) : 0), 0);
   const pendingOrdersCount = orders.filter((o) => o.status === 'pending').length;
@@ -622,7 +750,7 @@ export default function AdminDashboardClient({
                 <p className="text-xs text-gray-500 mt-1">Tạo và quản lý nội dung khoá học trên nền tảng</p>
               </div>
               <button
-                onClick={() => alert('Chức năng thêm khóa học mới đang được khởi tạo qua Admin API!')}
+                onClick={openAddCourse}
                 className="py-2 px-4 bg-amber-500 text-[#0a0a0f] font-bold text-xs rounded-xl hover:bg-amber-400 transition-colors"
               >
                 + Tạo khóa học mới
@@ -646,18 +774,22 @@ export default function AdminDashboardClient({
                 <div key={c.slug} className="card-dark p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-white/10 transition-colors">
                   <div className="flex items-start gap-4">
                     <div className="text-4xl bg-white/5 p-3 rounded-2xl shrink-0">{c.image_url || '🎓'}</div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <h3 className="font-extrabold text-base text-white">{c.title}</h3>
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
-                          Đã xuất bản
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                          c.published
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                        }`}>
+                          {c.published ? 'Đã xuất bản' : 'Bản nháp'}
                         </span>
                       </div>
                       <p className="text-xs text-gray-500 mt-1 truncate max-w-lg">{c.description}</p>
                       <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
                         <span className="flex items-center gap-1">⏱️ Chương: <strong>{c.slug === 'tao-anh-ai-chuyen-nghiep' ? 3 : 4}</strong></span>
                         <span>•</span>
-                        <span>Bài học: <strong>{c.slug === 'tao-anh-ai-chuyen-nghiep' ? 12 : 12}</strong></span>
+                        <span>Bài học: <strong>12</strong></span>
                         <span>•</span>
                         <span>Học viên: <strong>{c.slug === 'tao-anh-ai-chuyen-nghiep' ? 1250 : (c.slug === 'video-ai-viral' ? 820 : 340)}</strong></span>
                       </div>
@@ -672,11 +804,17 @@ export default function AdminDashboardClient({
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <button className="px-3 py-2 bg-white/5 border border-white/5 hover:bg-white/10 rounded-xl text-xs font-semibold">
+                      <button
+                        onClick={() => openEditCourse(c)}
+                        className="px-3 py-2 bg-white/5 border border-white/5 hover:bg-white/10 rounded-xl text-xs font-semibold"
+                      >
                         ✏️ Sửa
                       </button>
-                      <button className="px-3 py-2 bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 text-sky-400 rounded-xl text-xs font-semibold">
-                        👥 Học viên
+                      <button
+                        onClick={() => handleDeleteCourse(c.id)}
+                        className="px-3 py-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-semibold"
+                      >
+                        🗑️ Xoá
                       </button>
                       <Link
                         href={`/courses/${c.slug}`}
@@ -1055,6 +1193,114 @@ export default function AdminDashboardClient({
           </div>
         )}
       </main>
+
+      {/* COURSE CREATION/EDITING MODAL */}
+      {isCourseModalOpen && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-[#0d0d15] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-white/5 flex justify-between items-center">
+              <h2 className="font-extrabold text-lg text-white">
+                {editingCourse ? 'Sửa thông tin Khóa học' : 'Tạo Khóa học mới'}
+              </h2>
+              <button
+                onClick={() => setIsCourseModalOpen(false)}
+                className="text-gray-400 hover:text-white text-xl focus:outline-none"
+              >
+                ×
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveCourse} className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Tên khóa học</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ví dụ: Tạo video Tiếng Anh hỏi đáp bằng Tool"
+                  value={courseForm.title}
+                  onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })}
+                  className="w-full bg-white/5 border border-white/5 focus:border-amber-500 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Slug (Đường dẫn)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="ví-du-viet-lien-khong-dau"
+                    value={courseForm.slug}
+                    onChange={(e) => setCourseForm({ ...courseForm, slug: e.target.value })}
+                    className="w-full bg-white/5 border border-white/5 focus:border-amber-500 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Giá tiền (VND)</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={courseForm.price}
+                    onChange={(e) => setCourseForm({ ...courseForm, price: Number(e.target.value) })}
+                    className="w-full bg-white/5 border border-white/5 focus:border-amber-500 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-1 space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Emoji / Icon</label>
+                  <input
+                    type="text"
+                    value={courseForm.image_url}
+                    onChange={(e) => setCourseForm({ ...courseForm, image_url: e.target.value })}
+                    className="w-full bg-white/5 border border-white/5 focus:border-amber-500 rounded-xl px-3 py-2.5 text-sm text-center text-white focus:outline-none"
+                  />
+                </div>
+                <div className="col-span-2 flex items-center pt-5">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={courseForm.published}
+                      onChange={(e) => setCourseForm({ ...courseForm, published: e.target.checked })}
+                      className="w-4 h-4 rounded text-amber-500 border-white/20 bg-transparent focus:ring-amber-500"
+                    />
+                    <span className="text-xs font-bold text-gray-300">Xuất bản công khai</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Mô tả ngắn</label>
+                <textarea
+                  placeholder="Nhập mô tả tóm tắt nội dung khóa học..."
+                  value={courseForm.description}
+                  onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/5 focus:border-amber-500 rounded-xl p-3 text-xs text-white focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setIsCourseModalOpen(false)}
+                  className="px-4 py-2 border border-white/5 hover:bg-white/5 rounded-xl text-xs font-bold text-gray-300 transition-all"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-amber-500 text-[#0a0a0f] hover:bg-amber-400 rounded-xl text-xs font-bold transition-all"
+                >
+                  Lưu thay đổi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

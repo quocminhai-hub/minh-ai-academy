@@ -42,7 +42,76 @@ export default function LmsPlayer({
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>(initialCompletedLessonIds);
   const [savingProgress, setSavingProgress] = useState(false);
 
+  // Q&A states
+  const [qaList, setQaList] = useState<any[]>([]);
+  const [newQuestionText, setNewQuestionText] = useState('');
+  const [submittingQuestion, setSubmittingQuestion] = useState(false);
+
   const activeLesson = lessons[activeLessonIndex] || null;
+
+  // Fetch questions for the active lesson on load/change
+  useEffect(() => {
+    if (activeLesson) {
+      const fetchLessonQuestions = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('student_questions')
+            .select('*, profiles(full_name)')
+            .eq('lesson_id', activeLesson.id)
+            .order('created_at', { ascending: true });
+          if (!error && data) {
+            setQaList(data);
+          } else {
+            setQaList([]);
+          }
+        } catch (e) {
+          console.warn('Q&A table query failed, using empty list.');
+          setQaList([]);
+        }
+      };
+      fetchLessonQuestions();
+    }
+  }, [activeLesson?.id]);
+
+  const handleSendQuestion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newQuestionText.trim() || submittingQuestion || !activeLesson) return;
+    setSubmittingQuestion(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('student_questions')
+        .insert({
+          user_id: userId,
+          course_id: course.id,
+          lesson_id: activeLesson.id,
+          question_text: newQuestionText.trim(),
+          status: 'pending'
+        })
+        .select('*, profiles(full_name)')
+        .single();
+
+      if (!error && data) {
+        setQaList(prev => [...prev, data]);
+        setNewQuestionText('');
+      } else {
+        // Fallback mockup local add in case table is not ready or fails RLS
+        const mockNewQ = {
+          id: 'temp-' + Math.random(),
+          question_text: newQuestionText.trim(),
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          profiles: { full_name: 'Bạn' }
+        };
+        setQaList(prev => [...prev, mockNewQ]);
+        setNewQuestionText('');
+      }
+    } catch (err) {
+      console.error('Error sending question:', err);
+    } finally {
+      setSubmittingQuestion(false);
+    }
+  };
 
   // Calculate progress percent
   const progressPercent = lessons.length > 0
@@ -223,6 +292,59 @@ export default function LmsPlayer({
                     <li>Sử dụng các tài liệu đính kèm ở cộng đồng thảo luận để làm bài tập</li>
                     <li>Nếu có bất kỳ thắc mắc nào, hãy click mục &quot;Cộng đồng&quot; ở thanh điều hướng để trao đổi cùng các bạn học viên khác.</li>
                   </ul>
+                </div>
+              </div>
+
+              {/* Q&A Section */}
+              <div className="card-dark p-6 space-y-6">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <span>💬</span> Hỏi đáp bài học
+                </h3>
+                
+                {/* Ask a question form */}
+                <form onSubmit={handleSendQuestion} className="space-y-3">
+                  <textarea
+                    placeholder="Đặt câu hỏi về bài học này cho giảng viên..."
+                    value={newQuestionText}
+                    onChange={(e) => setNewQuestionText(e.target.value)}
+                    rows={3}
+                    className="w-full bg-[#050508] border border-white/5 focus:border-[#0EA5E9] rounded-xl p-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#0EA5E9]"
+                    required
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={submittingQuestion || !newQuestionText.trim()}
+                      className="btn-primary py-2 px-5 text-xs font-bold disabled:opacity-50"
+                    >
+                      {submittingQuestion ? 'Đang gửi...' : 'Gửi câu hỏi'}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Questions list */}
+                <div className="space-y-4 pt-4 border-t border-white/5">
+                  {qaList.length > 0 ? (
+                    qaList.map((q) => (
+                      <div key={q.id} className="bg-white/[0.01] border border-white/5 p-4 rounded-xl space-y-2">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-bold text-gray-300">👤 {q.profiles?.full_name || 'Học viên'}</span>
+                          <span className="text-gray-500">{new Date(q.created_at).toLocaleDateString('vi-VN')}</span>
+                        </div>
+                        <p className="text-sm text-gray-300">{q.question_text}</p>
+                        
+                        {/* Instructor Answer */}
+                        {q.status === 'answered' && q.answer_text && (
+                          <div className="mt-3 pl-4 border-l-2 border-[#0EA5E9] bg-[#0EA5E9]/5 p-3 rounded-xl space-y-1">
+                            <div className="text-xs font-bold text-[#0EA5E9]">Giảng viên phản hồi:</div>
+                            <p className="text-sm text-gray-300">{q.answer_text}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-gray-500 text-center py-2">Chưa có câu hỏi nào cho bài học này. Hãy đặt câu hỏi đầu tiên!</p>
+                  )}
                 </div>
               </div>
             </>

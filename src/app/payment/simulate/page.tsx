@@ -120,8 +120,15 @@ function SimulatePaymentContent() {
   }
 
   const transferCode = `MAD${order.id.slice(0, 8).toUpperCase()}`;
+  
+  // Dynamic bank details from env variables
+  const bankBin = process.env.NEXT_PUBLIC_BANK_BIN || 'MB';
+  const bankName = process.env.NEXT_PUBLIC_BANK_NAME || 'MB Bank (Quân Đội)';
+  const bankAccount = process.env.NEXT_PUBLIC_BANK_ACCOUNT || '09090909999';
+  const bankAccountName = process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME || 'NGUYEN QUOC MINH';
+
   // Use VietQR dynamic QR code builder for beautiful simulation
-  const qrCodeUrl = `https://img.vietqr.io/image/MB-09090909999-compact2.png?amount=${order.amount}&addInfo=${transferCode}&accountName=NGUYEN%20QUOC%20MINH`;
+  const qrCodeUrl = `https://img.vietqr.io/image/${bankBin}-${bankAccount}-compact2.png?amount=${order.amount}&addInfo=${transferCode}&accountName=${encodeURIComponent(bankAccountName)}`;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white pt-24 pb-12 px-4 sm:px-6">
@@ -156,15 +163,15 @@ function SimulatePaymentContent() {
             <div className="border-t border-white/5 pt-4 space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">Ngân hàng</span>
-                <span className="font-semibold text-white">MB Bank (Quân Đội)</span>
+                <span className="font-semibold text-white">{bankName}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Số tài khoản</span>
-                <span className="font-mono font-semibold text-white select-all">09090909999</span>
+                <span className="font-mono font-semibold text-white select-all">{bankAccount}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Chủ tài khoản</span>
-                <span className="font-semibold text-white">NGUYEN QUOC MINH</span>
+                <span className="font-semibold text-white">{bankAccountName}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Số tiền chuyển</span>

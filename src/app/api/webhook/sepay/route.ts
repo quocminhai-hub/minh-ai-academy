@@ -5,11 +5,13 @@ export async function POST(request: Request) {
   try {
     // 1. Verify SePay API Key (Webhook token) if configured
     const authHeader = request.headers.get('authorization');
-    const webhookToken = process.env.SEPAY_WEBHOOK_TOKEN;
+    const webhookToken = process.env.SEPAY_WEBHOOK_TOKEN || process.env.SEPAY_API_KEY;
 
     if (webhookToken) {
-      if (!authHeader || !authHeader.includes(webhookToken)) {
-        console.warn('Unauthorized SePay Webhook attempt: Invalid API Key');
+      const cleanToken = webhookToken.trim().toLowerCase();
+      const cleanHeader = (authHeader || '').trim().toLowerCase();
+      if (!cleanHeader.includes(cleanToken)) {
+        console.warn(`Unauthorized SePay Webhook attempt: Token mismatch. Received header: ${authHeader}`);
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }

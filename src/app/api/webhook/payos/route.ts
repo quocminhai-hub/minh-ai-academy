@@ -11,8 +11,8 @@ export async function POST(request: Request) {
     // Code "00" represents success in PayOS
     if (code === '00' && data) {
       const description = data.description || '';
-      // Extract the order prefix like MADXXXXXX
-      const match = description.match(/MAD([0-9A-Fa-f\-]+)/);
+      // Extract the order prefix like MADXXXXXX or NADXXXXXX (case-insensitive)
+      const match = description.match(/(?:[MN]AD)?([0-9A-Fa-f]{8})/i);
       
       if (match && match[1]) {
         const orderPrefix = match[1].toLowerCase();

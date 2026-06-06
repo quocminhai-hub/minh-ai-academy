@@ -79,6 +79,18 @@ export default function AdminDashboardClient({
 }: AdminDashboardClientProps) {
   const supabase = createClient();
   const [activeTab, setActiveTab] = useState('admin-panel');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setIsSidebarOpen(window.innerWidth >= 1024);
+  }, []);
+
+  const handleTabClick = (tabId: string) => {
+    setActiveTab(tabId);
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   // Local state for live updates
   const [profiles, setProfiles] = useState<Profile[]>(initialProfiles);
@@ -437,19 +449,50 @@ export default function AdminDashboardClient({
   );
 
   return (
-    <div className="min-h-screen bg-[#06060a] text-white flex">
+    <div className="min-h-screen bg-[#06060a] text-white flex relative">
+      
+      {/* Mobile overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-30 lg:hidden backdrop-blur-sm"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Floating Toggle Button */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className={`fixed z-50 w-10 h-10 bg-[#1a1a24] border border-white/10 text-white rounded-lg flex items-center justify-center shadow-lg hover:bg-white/20 transition-all ${
+          isSidebarOpen ? 'lg:hidden bottom-6 right-6' : 'bottom-6 right-6 lg:bottom-auto lg:top-24 lg:left-6'
+        }`}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+
       {/* LEFT SIDEBAR */}
-      <aside className="w-64 bg-[#0d0d15] border-r border-white/5 flex flex-col justify-between pt-20 shrink-0">
-        <div className="p-4 space-y-6">
+      <aside className={`fixed top-0 bottom-0 z-40 bg-[#0d0d15] border-r border-white/5 flex flex-col justify-between pt-20 shrink-0 transition-all duration-300 ${
+        isSidebarOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full'
+      }`}>
+        <div className="p-4 space-y-6 overflow-y-auto">
           {/* Admin Header Info */}
-          <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 p-3 rounded-2xl">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center font-bold text-sm text-[#0a0a0f]">
-              {currentUser.fullName[0] || 'A'}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 p-3 rounded-2xl flex-1">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center font-bold text-sm text-[#0a0a0f] shrink-0">
+                {currentUser.fullName[0] || 'A'}
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold truncate text-white">{currentUser.fullName}</div>
+                <div className="text-[10px] text-amber-500 font-bold tracking-wider uppercase">Quản trị viên</div>
+              </div>
             </div>
-            <div className="min-w-0">
-              <div className="text-sm font-semibold truncate text-white">{currentUser.fullName}</div>
-              <div className="text-[10px] text-amber-500 font-bold tracking-wider uppercase">Quản trị viên</div>
-            </div>
+            
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors shrink-0"
+              title="Đóng sidebar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
           </div>
 
           {/* Navigation Sections */}
@@ -458,7 +501,7 @@ export default function AdminDashboardClient({
             <div className="space-y-1">
               <div className="px-3 py-1">Tổng Quan</div>
               <button
-                onClick={() => setActiveTab('admin-panel')}
+                onClick={() => handleTabClick('admin-panel')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                   activeTab === 'admin-panel'
                     ? 'text-amber-500 bg-amber-500/10 border-l-2 border-amber-500 font-bold'
@@ -479,7 +522,7 @@ export default function AdminDashboardClient({
             <div className="space-y-1">
               <div className="px-3 py-1">Nội Dung</div>
               <button
-                onClick={() => setActiveTab('quan-ly-khoa-hoc')}
+                onClick={() => handleTabClick('quan-ly-khoa-hoc')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                   activeTab === 'quan-ly-khoa-hoc'
                     ? 'text-amber-500 bg-amber-500/10 border-l-2 border-amber-500 font-bold'
@@ -489,7 +532,7 @@ export default function AdminDashboardClient({
                 📚 <span>Quản lý Khoá học</span>
               </button>
               <button
-                onClick={() => setActiveTab('cap-khoa-hoc')}
+                onClick={() => handleTabClick('cap-khoa-hoc')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                   activeTab === 'cap-khoa-hoc'
                     ? 'text-amber-500 bg-amber-500/10 border-l-2 border-amber-500 font-bold'
@@ -499,7 +542,7 @@ export default function AdminDashboardClient({
                 🔑 <span>Cấp khoá học</span>
               </button>
               <button
-                onClick={() => setActiveTab('cau-hoi-hoc-vien')}
+                onClick={() => handleTabClick('cau-hoi-hoc-vien')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                   activeTab === 'cau-hoi-hoc-vien'
                     ? 'text-amber-500 bg-amber-500/10 border-l-2 border-amber-500 font-bold'
@@ -514,7 +557,7 @@ export default function AdminDashboardClient({
             <div className="space-y-1">
               <div className="px-3 py-1">Bán Hàng</div>
               <button
-                onClick={() => setActiveTab('quan-ly-don-hang')}
+                onClick={() => handleTabClick('quan-ly-don-hang')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                   activeTab === 'quan-ly-don-hang'
                     ? 'text-amber-500 bg-amber-500/10 border-l-2 border-amber-500 font-bold'
@@ -534,7 +577,7 @@ export default function AdminDashboardClient({
       </aside>
 
       {/* MAIN CONTAINER */}
-      <main className="flex-1 min-w-0 pt-20 p-6 overflow-y-auto">
+      <main className={`flex-1 min-w-0 pt-20 p-6 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
         
         {/* ========================================================
             TAB 1: ADMIN PANEL (OVERVIEW)

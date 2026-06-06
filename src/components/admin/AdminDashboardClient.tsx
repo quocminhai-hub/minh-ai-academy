@@ -215,7 +215,7 @@ export default function AdminDashboardClient({
 
       setGrantMessage({
         type: 'success',
-        text: `Đã cấp quyền học thành công cho học viên ${targetUser.full_name} (${targetUser.email})!`,
+        text: `Đã cấp quyền học thành công cho học viên ${targetUser?.full_name} (${targetUser?.email})!`,
       });
       setGrantEmail('');
       setSelectedCoursesToGrant([]);

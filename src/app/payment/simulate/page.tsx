@@ -18,7 +18,19 @@ function SimulatePaymentContent() {
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState('');
+  const [isLocalhost, setIsLocalhost] = useState(false);
 
+  // Detect environment
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsLocalhost(
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1'
+      );
+    }
+  }, []);
+
+  // Fetch initial details
   useEffect(() => {
     if (!orderId) {
       setError('Mã đơn hàng không hợp lệ.');
@@ -61,6 +73,31 @@ function SimulatePaymentContent() {
 
     fetchOrderDetails();
   }, [orderId, supabase]);
+
+  // Poll for order status (so page auto-redirects when webhook payment completes)
+  useEffect(() => {
+    if (!orderId || order?.status === 'completed') return;
+
+    const interval = setInterval(async () => {
+      try {
+        const { data: orderData, error: orderErr } = await supabase
+          .from('orders')
+          .select('status')
+          .eq('id', orderId)
+          .single();
+
+        if (!orderErr && orderData && orderData.status === 'completed') {
+          clearInterval(interval);
+          router.push('/dashboard?payment=success');
+          router.refresh();
+        }
+      } catch (err) {
+        console.error('Error polling order status:', err);
+      }
+    }, 3000); // Check every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [orderId, order?.status, supabase, router]);
 
   const handleConfirmPayment = async () => {
     if (!orderId) return;
@@ -184,22 +221,24 @@ function SimulatePaymentContent() {
             </div>
           </div>
 
-          {/* Action Simulation */}
-          <div className="card-dark p-6 border border-amber-500/20 bg-amber-500/[0.02] space-y-4">
-            <h3 className="font-bold text-amber-400 flex items-center gap-2">
-              <span>🛠️</span> Chế độ Giả lập Thanh toán
-            </h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              Bạn đang ở trong môi trường phát triển local. Nhấn nút dưới đây để giả lập tín hiệu từ hệ thống ngân hàng (webhook) gửi về web, cập nhật trạng thái đơn hàng thành công và mở khóa khóa học lập tức.
-            </p>
-            <button
-              onClick={handleConfirmPayment}
-              disabled={confirming}
-              className="btn-primary w-full justify-center py-3 text-sm font-bold disabled:opacity-50"
-            >
-              {confirming ? 'Đang kích hoạt...' : '✓ Xác nhận đã chuyển khoản thành công'}
-            </button>
-          </div>
+          {/* Action Simulation (Only show on localhost) */}
+          {isLocalhost && (
+            <div className="card-dark p-6 border border-amber-500/20 bg-amber-500/[0.02] space-y-4">
+              <h3 className="font-bold text-amber-400 flex items-center gap-2">
+                <span>🛠️</span> Chế độ Giả lập Thanh toán
+              </h3>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Bạn đang ở trong môi trường phát triển local. Nhấn nút dưới đây để giả lập tín hiệu từ hệ thống ngân hàng (webhook) gửi về web, cập nhật trạng thái đơn hàng thành công và mở khóa khóa học lập tức.
+              </p>
+              <button
+                onClick={handleConfirmPayment}
+                disabled={confirming}
+                className="btn-primary w-full justify-center py-3 text-sm font-bold disabled:opacity-50"
+              >
+                {confirming ? 'Đang kích hoạt...' : '✓ Xác nhận đã chuyển khoản thành công'}
+              </button>
+            </div>
+          )}
         </div>
 
       </div>

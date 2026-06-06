@@ -1,0 +1,305 @@
+@import "tailwindcss";
+
+/* ==========================================
+   MINH AI ACADEMY — Design System
+   Theme: Xanh Dương Công Nghệ (Dark Mode)
+   ========================================== */
+
+@theme {
+  --color-primary: #0EA5E9;
+  --color-primary-light: #38BDF8;
+  --color-primary-dark: #0284C7;
+  --color-accent: #8B5CF6;
+  --color-accent-light: #A78BFA;
+  --color-cyan: #06B6D4;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-surface: #111118;
+  --color-surface-light: #1a1a24;
+  --color-bg: #0a0a0f;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-hover: rgba(255, 255, 255, 0.12);
+  --color-text: #f5f5f5;
+  --color-text-muted: #9ca3af;
+  --color-text-dim: #6b7280;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ==========================================
+   Base Styles
+   ========================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(14, 165, 233, 0.3);
+  color: #fff;
+}
+
+/* ==========================================
+   Button Components
+   ========================================== */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, #0EA5E9, #0284C7);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(14, 165, 233, 0.5);
+  background: linear-gradient(135deg, #38BDF8, #0EA5E9);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  color: #0EA5E9;
+}
+
+.btn-secondary:hover {
+  background: rgba(14, 165, 233, 0.1);
+  border-color: rgba(14, 165, 233, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.btn-accent:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+}
+
+/* ==========================================
+   Card Components
+   ========================================== */
+
+.card-dark {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+}
+
+.card-dark:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: 0 0 30px rgba(14, 165, 233, 0.05);
+}
+
+.card-glass {
+  background: rgba(17, 17, 24, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+}
+
+/* ==========================================
+   Input Components
+   ========================================== */
+
+.input-dark {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.625rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f5f5f5;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.input-dark::placeholder {
+  color: #6b7280;
+}
+
+.input-dark:focus {
+  border-color: rgba(14, 165, 233, 0.5);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* ==========================================
+   Badge Components
+   ========================================== */
+
+.badge-free {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22C55E;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.badge-premium {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(14, 165, 233, 0.15);
+  color: #38BDF8;
+  border: 1px solid rgba(14, 165, 233, 0.25);
+}
+
+.badge-new {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(139, 92, 246, 0.15);
+  color: #A78BFA;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+/* ==========================================
+   Glow & Gradient Effects
+   ========================================== */
+
+.glow-blue {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.4), transparent 70%);
+  pointer-events: none;
+  filter: blur(60px);
+}
+
+.glow-purple {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.3), transparent 70%);
+  pointer-events: none;
+  filter: blur(60px);
+}
+
+.gradient-text-blue {
+  background: linear-gradient(135deg, #0EA5E9, #38BDF8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-accent {
+  background: linear-gradient(135deg, #8B5CF6, #06B6D4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==========================================
+   Animations
+   ========================================== */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.2; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+/* ==========================================
+   Section Helpers
+   ========================================== */
+
+.section-padding {
+  padding: 3rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .section-padding {
+    padding: 6rem 1.5rem;
+  }
+}
+
+/* ==========================================
+   Scrollbar
+   ========================================== */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

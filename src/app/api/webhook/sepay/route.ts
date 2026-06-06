@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   try {
@@ -33,7 +33,9 @@ export async function POST(request: Request) {
 
     if (match && match[1]) {
       const orderPrefix = match[1].toLowerCase();
-      const supabase = await createClient();
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+      const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey);
 
       const startUuid = `${orderPrefix}-0000-0000-0000-000000000000`;
       const endUuid = `${orderPrefix}-ffff-ffff-ffff-ffffffffffff`;

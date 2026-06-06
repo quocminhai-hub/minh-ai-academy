@@ -317,3 +317,30 @@ end;
 $$ language plpgsql security definer;
 
 
+-- 7. Student Questions table (for lesson Q&A support)
+create table if not exists public.student_questions (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles on delete cascade not null,
+  course_id uuid references public.courses on delete cascade not null,
+  lesson_id uuid references public.lessons on delete cascade,
+  question_text text not null,
+  status text default 'pending' check (status in ('pending', 'answered')),
+  answer_text text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.student_questions enable row level security;
+
+-- Policies for student questions
+drop policy if exists "Users can view and insert their own questions." on public.student_questions;
+create policy "Users can view and insert their own questions." on public.student_questions
+  for all using (auth.uid() = user_id);
+
+drop policy if exists "Admins can view and update all questions." on public.student_questions;
+create policy "Admins can view and update all questions." on public.student_questions
+  for all using (
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  );

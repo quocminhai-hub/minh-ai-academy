@@ -28,8 +28,8 @@ export async function POST(request: Request) {
     }
 
     const content = transactionContent || '';
-    // Extract the order prefix like MADXXXXXX or NADXXXXXX (case-insensitive)
-    const match = content.match(/(?:[MN]AD)?([0-9A-Fa-f]{8})/i);
+    // Extract the order prefix like MADXXXXXX or NADXXXXXX (strictly require prefix to avoid matching transaction numbers)
+    const match = content.match(/[MN]AD([0-9A-Fa-f]{8})/i);
 
     if (match && match[1]) {
       const orderPrefix = match[1].toLowerCase();

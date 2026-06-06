@@ -18,11 +18,15 @@ export async function POST(request: Request) {
         const orderPrefix = match[1].toLowerCase();
         const supabase = await createClient();
 
+        const startUuid = `${orderPrefix}-0000-0000-0000-000000000000`;
+        const endUuid = `${orderPrefix}-ffff-ffff-ffff-ffffffffffff`;
+
         // Search for the pending order starting with the code prefix
         const { data: order, error } = await supabase
           .from('orders')
           .select('id, status')
-          .ilike('id', `${orderPrefix}%`)
+          .gte('id', startUuid)
+          .lte('id', endUuid)
           .eq('status', 'pending')
           .limit(1)
           .maybeSingle();

@@ -48,7 +48,7 @@ export async function sendActivationEmail(email: string, fullName: string, cours
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Minh AI Academy <onboarding@resend.dev>',
+        from: 'Minh AI Academy <support@sadoma.io.vn>',
         to: email,
         subject: `[Minh AI Academy] Kích hoạt thành công: ${courseTitle}`,
         html: emailHtml,

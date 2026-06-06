@@ -11,23 +11,23 @@ export async function POST(request: Request) {
       const cleanToken = webhookToken.trim().toLowerCase();
       const cleanHeader = (authHeader || '').trim().toLowerCase();
       if (!cleanHeader.includes(cleanToken)) {
-        console.warn(`[DEBUG] Token mismatch in SePay webhook. Received: "${authHeader}", Expected containing: "${webhookToken}". Proceeding for debug.`);
-        // Temporarily comment out the 401 block so it doesn't block the transaction during testing
-        // return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        console.warn(`Unauthorized SePay Webhook attempt: Token mismatch. Received header: ${authHeader}`);
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
 
     const body = await request.json();
     console.log('Received SePay Webhook:', body);
 
-    const { transactionContent, transferType, transferAmount } = body;
+    const { content: rawContent, description, transferType, transferAmount } = body;
 
     // Only process incoming transfers
     if (transferType !== 'in') {
       return NextResponse.json({ success: true, message: 'Ignored non-incoming transaction' });
     }
 
-    const content = transactionContent || '';
+    // SePay sends the transfer description/memo in 'content' or 'description' field
+    const content = rawContent || description || '';
     // Extract the order prefix like MADXXXXXX or NADXXXXXX (strictly require prefix to avoid matching transaction numbers)
     const match = content.match(/[MN]AD([0-9A-Fa-f]{8})/i);
 
